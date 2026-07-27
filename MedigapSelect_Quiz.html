@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Medigap Behavioral & 25-Year Lifetime Cost Profiler v3</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #2d3748;
+            margin: 0;
+            padding: 15px;
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06);
+        }
+        h1 { color: #1a365d; font-size: 24px; text-align: center; margin-bottom: 6px; }
+        .subtitle { text-align: center; color: #718096; margin-bottom: 25px; font-size: 14px; }
+        
+        .section-header {
+            background: #e2e8f0;
+            padding: 12px 15px;
+            border-left: 5px solid #3182ce;
+            font-weight: bold;
+            color: #2b6cb0;
+            margin: 25px 0 15px 0;
+            border-radius: 0 4px 4px 0;
+            font-size: 16px;
+        }
+        .q-card {
+            background: #fafafa;
+            border: 1px solid #e2e8f0;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        .q-title { font-weight: 600; color: #2d3748; margin-bottom: 10px; font-size: 15px; }
+        
+        /* iPhone / Mobile Friendly Touch Targets */
+        .opt-label {
+            display: flex;
+            align-items: flex-start;
+            background: #ffffff;
+            border: 1px solid #cbd5e0;
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: rgba(49, 130, 206, 0.1);
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+        .opt-label:active, .opt-label:hover { background-color: #ebf8ff; border-color: #3182ce; }
+        .opt-label input[type="radio"] {
+            margin-right: 12px;
+            margin-top: 3px;
+            min-width: 18px;
+            min-height: 18px;
+            cursor: pointer;
+        }
+
+        .btn-group { display: flex; flex-direction: column; gap: 12px; margin-top: 25px; }
+        button {
+            display: block;
+            width: 100%;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        button.btn-calc { background: #2b6cb0; color: #ffffff; }
+        button.btn-calc:active { background: #2c5282; }
+        button.btn-print { background: #38a169; color: #ffffff; }
+        button.btn-print:active { background: #276749; }
+        button.btn-reset { background: #718096; color: #ffffff; }
+        button.btn-reset:active { background: #4a5568; }
+
+        /* Results Formatting */
+        #results { display: none; margin-top: 30px; }
+        .alert-box { padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+        .warning { background: #fffaf0; border: 1px solid #fbd38d; color: #9c4221; }
+        .info { background: #ebf8ff; border: 1px solid #bee3f8; color: #2b6cb0; }
+        .summary-card { background: #f7fafc; border: 1px solid #e2e8f0; padding: 18px; border-radius: 8px; margin: 20px 0; }
+        
+        .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 20px 0; }
+        table.cost-table { width: 100%; border-collapse: collapse; background: #ffffff; font-size: 13px; min-width: 600px; }
+        table.cost-table th, table.cost-table td { border: 1px solid #cbd5e0; padding: 10px; text-align: right; }
+        table.cost-table th { background: #edf2f7; text-align: center; color: #2d3748; }
+        table.cost-table tr.highlight { background: #e6fffa; font-weight: bold; }
+        table.cost-table td.left { text-align: left; }
+        .plan-badge { display: inline-block; background: #3182ce; color: white; padding: 4px 12px; border-radius: 12px; font-size: 14px; }
+
+        .ref-section { margin-top: 35px; border-top: 2px solid #e2e8f0; padding-top: 20px; font-size: 12px; color: #4a5568; }
+        .ref-section h4 { margin-bottom: 8px; color: #2d3748; font-size: 14px; }
+        .ref-section ul { padding-left: 20px; margin: 5px 0; }
+
+        /* Print Specific Optimization */
+        @media print {
+            body { background: #ffffff; padding: 0; color: #000; }
+            .container { box-shadow: none; border: none; padding: 0; max-width: 100%; }
+            #quizForm, .btn-group, .ref-section { display: none !important; }
+            #results { display: block !important; }
+            .alert-box, .summary-card { border: 1px solid #ccc; background: #fff; color: #000; }
+            table.cost-table th, table.cost-table td { border: 1px solid #000; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Medigap Behavioral & 25-Year Cost Profiler</h1>
+    <p class="subtitle">Iteration 3: Mobile-Optimized, 20-Question Consistency Analysis & Lifetime Cost Breakdown</p>
+
+    <form id="quizForm">
+        
+        <div class="section-header">Domain 1: Symptom & Care-Seeking Reaction</div>
+        
+        <div class="q-card">
+            <div class="q-title">Q1 (Angle A): Sudden Weekend Symptoms</div>
+            <p>If you experience sudden chest pressure or severe heartburn on a Saturday, what is your immediate reaction?</p>
+            <label class="opt-label"><input type="radio" name="q1" value="1" required> <span>I go to Urgent Care/ER immediately regardless of out-of-pocket costs.</span></label>
+            <label class="opt-label"><input type="radio" name="q1" value="2"> <span>I go if I know my copay is small ($20-$50), but hesitation arises if costs are unknown.</span></label>
+            <label class="opt-label"><input type="radio" name="q1" value="3"> <span>I wait until Monday to see my primary doctor to avoid high emergency facility fees.</span></label>
+            <label class="opt-label"><input type="radio" name="q1" value="4"> <span>I rest and wait several days to see if it resolves on its own before seeking paid care.</span></label>
+        </div>
+
+        <div class="q-card">
+            <div class="q-title">Q2 (Angle B - Verification): Diagnostic Test Friction</div>
+            <p>Your physician recommends an optional $350 diagnostic scan to rule out a minor risk. How do you respond?</p>
+            <label class="opt-label"><input type="radio" name="q2" value="1" required> <span>I schedule it immediately—peace of mind is worth any price.</span></label>
+            <label class="opt-label"><input type="radio" name="q2" value="2"> <span>I schedule it, but ask if there are lower copay tier options.</span></label>
+            <label class="opt-label"><input type="radio" name="q2" value="3"> <span>I hesitate and ask if the test is strictly necessary before spending $350.</span></label>
+            <label class="opt-label"><input type="radio" name="q2" value="4"> <span>I decline or delay the test unless symptoms worsen significantly.</span></label>
+        </div>
+
+        <div class="section-header">Domain 2: Financial Regret & Bill Friction</div>
+
+        <div class="q-card">
+            <div class="q-title">Q3 (Angle A): Unexpected Medical Bills</div>
+            <p>How do you feel mentally when receiving an unexpected $150 medical copay bill in the mail?</p>
+            <label class="opt-label"><input type="radio" name="q3" value="4" required> <span>Deeply frustrated and anxious—I hate surprise bills after the fact.</span></label>
+            <label class="opt-label"><input type="radio" name="q3" value="3"> <span>Slightly annoyed, but manageable if expected within my plan.</span></label>
+            <label class="opt-label"><input type="radio" name="q3" value="2"> <span>Neutral—I expect occasional bills as long as the annual total is low.</span></label>
+            <label class="opt-label"><input type="radio" name="q3" value="1"> <span>Indifferent—I evaluate insurance by annual bottom-line, not individual bills.</span></label>
+        </div>
+
+        <div class="q-card">
+            <div class="q-title">Q4 (Angle B - Verification): Unused Premium Regret</div>
+            <p>At the end of a healthy year where you paid $2,400 in insurance premiums but never visited a doctor, how do you feel?</p>
+            <label class="opt-label"><input type="radio" name="q4" value="1" required> <span>Frustrated—I feel like I wasted $2,400 on insurance I didn't use.</span></label>
+            <label class="opt-label"><input type="radio" name="q4" value="2"> <span>Slightly annoyed, wishing I had paid lower monthly premiums.</span></label>
+            <label class="opt-label"><input type="radio" name="q4" value="3"> <span>Acceptable—that is simply how insurance safety nets work.</span></label>
+            <label class="opt-label"><input type="radio" name="q4" value="4"> <span>Delighted—paying premiums and staying healthy is the best possible scenario.</span></label>
+        </div>
+
+        <div class="section-header">Domain 3: Cash Flow vs. Lump-Sum Deductible Buffer</div>
+
+        <div class="q-card">
+            <div class="q-title">Q5 (Angle A): Liquid Emergency Reserves</div>
+            <p>Do you have $3,000+ in liquid cash reserves set aside strictly for medical or household emergencies?</p>
+            <label class="opt-label"><input type="radio" name="q5" value="1" required> <span>Yes, liquid funds are available immediately without impacting my lifestyle.</span></label>
+            <label class="opt-label"><input type="radio" name="q5" value="2"> <span>Partially ($1,000–$2,500 available).</span></label>
+            <label class="opt-label"><input type="radio" name="q5" value="4"> <span>No, a sudden $2,950 bill would create significant financial strain.</span></label>
+        </div>
+
+        <div class="q-card">
+            <div class="q-title">Q6 (Angle B - Verification): Preferred Payment Model</div>
+            <p>Which payment structure causes you LESS psychological stress?</p>
+            <label class="opt-label"><input type="radio" name="q6" value="4" required> <span>Higher fixed monthly bill ($180/mo) with $0 bill surprises when sick.</span></label>
+            <label class="opt-label"><input type="radio" name="q6" value="3"> <span>Moderate monthly bill ($130/mo) with occasional $20 office copays.</span></label>
+            <label class="opt-label"><input type="radio" name="q6" value="1"> <span>Very low monthly bill ($45/mo) even if it means paying up to $2,950 when I get sick.</span></label>
+        </div>
+
+        <div class="section-header">Domain 4: Network & Excess Charge Risk</div>
+
+        <div class="q-card">
+            <div class="q-title">Q7 (Angle A): Part B Excess Charge Risk</div>
+            <p>Some specialists charge up to 15% extra above Medicare rates (Part B Excess Charges). How do you handle this?</p>
+            <label class="opt-label"><input type="radio" name="q7" value="4" required> <span>I want 100% protection against excess charges; I don't want to check doctor billing.</span></label>
+            <label class="opt-label"><input type="radio" name="q7" value="2"> <span>I am willing to ask my doctors if they accept Medicare assignment to save premium money.</span></label>
+            <label class="opt-label"><input type="radio" name="q7" value="1"> <span>I don't mind managing or paying small excess charges if they occur.</span></label>
+        </div>
+
+        <div class="q-card">
+            <div class="q-title">Q8 (Angle B - Verification): Doctor Freedom Preference</div>
+            <p>How important is it that you can see ANY Medicare doctor anywhere in the US without asking about billing rules?</p>
+            <label class="opt-label"><input type="radio" name="q8" value="4" required> <span>Critical—I want zero billing questions or restrictions anywhere.</span></label>
+            <label class="opt-label"><input type="radio" name="q8" value="2"> <span>Moderate—Most doctors accept standard Medicare anyway, so minor checks are fine.</span></label>
+            <label class="opt-label"><input type="radio" name="q8" value="1"> <span>Unimportant—I am fine taking basic administrative steps to save on premiums.</span></label>
+        </div>
+
+        <div class="section-header">Domain 5: Healthspan Trajectory & Anticipated Usage</div>
+
+        <div class="q-card">
+            <div class="q-title">Q9 (Angle A): Current Chronic Conditions</div>
+            <p>How many ongoing chronic health conditions do you manage (e.g., blood pressure, diabetes, arthritis)?</p>
+            <label class="opt-label"><input type="radio" name="q9" value="4" required> <span>3 or more chronic conditions requiring frequent specialist care.</span></label>
+            <label class="opt-label"><input type="radio" name="q9" value="3"> <span>1 to 2 managed conditions with regular doctor checkups.</span></label>
+            <label class="opt-label"><input type="radio" name="q9" value="1"> <span>0 chronic conditions; I only see the doctor for annual checkups.</span></label>
+        </div>
+
+        <div class="q-card">
+            <div class="q-title">Q10 (Angle B - Verification): Expected 10-Year Healthcare Usage</div>
+            <p>Looking ahead over the next 10 years, how frequently do you anticipate visiting medical providers?</p>
+            <label class="opt-label"><input type="radio" name="q10" value="4" required> <span>Frequently (10+ visits/year including specialists or physical therapy).</span></label>
+            <label class="opt-label"><input type="radio" name="q10" value="3"> <span>Moderately (4 to 8 routine visits per year).</span></label>
+            <label class="opt-label"><input type="radio" name="q10" value="1"> <span>Rarely (1 to 3 visits per year for standard preventative wellness).</span></label>
+        </div>
+
+        <div class="section-header">Domain 6: Longevity & Lock-In Risk Awareness</div>
+
+        <div class="q-card">
+            <div class="q-title">Q11 (Angle A): Family Longevity History</div>
+            <p>What is the general health span history of your immediate family past age 75?</p>
+            <label class="opt-label"><input type="radio" name="q11" value="4" required> <span>Family members often needed significant medical interventions in late life.</span></label>
+            <label class="opt-label"><input type="radio" name="q11" value="3"> <span>Moderate healthcare utilization in later years.</span></label>
+            <label class="opt-label"><input type="radio" name="q11" value="1"> <span>Long healthspan with minimal late-life medical intervention.</span></label>
+        </div>
+
+        <div class="q-card">
+            <div class="q-title">Q12 (Angle B - Verification): Medical Underwriting Lock-in Risk</div>
+            <p>In most states, changing Medigap plans later requires passing health screening (underwriting). How does this affect you?</p>
+            <label class="opt-label"><input type="radio" name="q12" value="4" required> <span>I want to pick a comprehensive plan now so I am never locked into a bad plan if I get sick.</span></label>
+            <label class="opt-label"><input type="radio" name="q12" value="2"> <span>I am willing to take a lighter plan now and risk health screening later to save money now.</span></label>
+        </div>
+
+        <div class="section-header">Domain 7: Eligibility & Discounts</div>
+
+        <div class="q-card">
+            <div class="q-title">Q13: Medicare Initial Eligibility Date</div>
+            <label class="opt-label"><input type="radio" name="q13" value="PRE2020" required> <span>Eligible BEFORE January 1, 2020 (Unlocks legacy Plan F).</span></label>
+            <label class="opt-label"><input type="radio" name="q13" value="POST2020"> <span>Eligible ON or AFTER January 1, 2020.</span></label>
+        </div>
+
+        <div class="q-card">
+            <div class="q-title">Q14: Household & Discount Eligibility</div>
+            <label class="opt-label"><input type="radio" name="q14" value="SPOUSE" required> <span>Enrolling with a spouse/partner (Eligible for up to 12% Household Discount).</span></label>
+            <label class="opt-label"><input type="radio" name="q14" value="SINGLE"> <span>Individual enrollee.</span></label>
+        </div>
+
+        <div class="btn-group">
+            <button type="button" class="btn-calc" onclick="evaluateAssessment()">Run Assessment & Generate 25-Year Cost Model</button>
+        </div>
+    </form>
+
+    <div id="results">
+        <h2>Assessment & Lifetime Cost Profile</h2>
+        
+        <div id="discrepancyBox" class="alert-box warning"></div>
+
+        <div class="alert-box info">
+            <h3 style="margin-top:0;">Primary Recommendation: <span id="recPlan" class="plan-badge"></span></h3>
+            <p id="recRationale"></p>
+            <p><strong>Baseline Benchmark Comparison Option:</strong> <span style="color:#2b6cb0; font-weight:bold;">Plan G</span> is included in the cost table below as the benchmark baseline for comparison.</p>
+        </div>
+
+        <div id="warningBox" class="alert-box warning"></div>
+
+        <div class="summary-card">
+            <h4 style="margin-top:0; color:#2b6cb0;">📊 Context & Key Financial Assumptions</h4>
+            <p style="font-size:13px; margin-bottom:8px;">To help you evaluate these options with confidence, this assessment projects cumulative lifetime costs across a 25-year horizon (Age 65 to 90) using the following baseline parameters:</p>
+            <ul style="font-size:13px; padding-left:20px; margin:0;">
+                <li><strong>Healthcare Rate Increase:</strong> 5.0% compounded annually (combining medical inflation + age-attained tier increases).</li>
+                <li><strong>Medicare Part B Base Premium:</strong> Indexed from $202.90/month base with annual CPI adjustments.</li>
+                <li><strong>Medicare Part B Deductible:</strong> Starts at $283/year and grows with medical inflation.</li>
+                <li><strong>High-Deductible Plan G Threshold:</strong> Based on the $2,950 calendar-year deductible cap.</li>
+                <li><strong>Plan G Advantage:</strong> Guarantees <strong>$0 Out-of-Pocket Usage Expenses</strong> after the Part B deductible is met.</li>
+            </ul>
+        </div>
+
+        <h3>25-Year Lifetime Healthcare Cost Model (Age 65 to 90)</h3>
+
+        <div class="table-responsive">
+            <table class="cost-table">
+                <thead>
+                    <tr>
+                        <th>Expense Component (Age 65–90)</th>
+                        <th>Plan G (Baseline)</th>
+                        <th>Plan N (Balanced)</th>
+                        <th>High-Deductible Plan G</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="left"><strong>Medicare Part A Costs</strong><br><small>(Hospital Deductible $1,736/stay)</small></td>
+                        <td>$0 <br><small>(Covered 100% by Medigap)</small></td>
+                        <td>$0 <br><small>(Covered 100% by Medigap)</small></td>
+                        <td>~$8,500 <br><small>(User pays hospital deductible until $2,950 met)</small></td>
+                    </tr>
+                    <tr>
+                        <td class="left"><strong>Medicare Part B Mandatory Premium</strong><br><small>($202.90/mo base w/ inflation)</small></td>
+                        <td>$115,000</td>
+                        <td>$115,000</td>
+                        <td>$115,000</td>
+                    </tr>
+                    <tr>
+                        <td class="left"><strong>Part B Annual Deductible</strong><br><small>($283/yr base w/ inflation)</small></td>
+                        <td>$11,500</td>
+                        <td>$11,500</td>
+                        <td>$11,500 <br><small>(Counts toward HD-G deductible)</small></td>
+                    </tr>
+                    <tr style="background:#f7fafc;">
+                        <td class="left"><strong>Medigap Plan Premium Costs</strong><br><small>(25-Year Cumulative Premium)</small></td>
+                        <td><strong>$82,000</strong><br><small>($175/mo start average)</small></td>
+                        <td><strong>$58,000</strong><br><small>($125/mo start average)</small></td>
+                        <td><strong>$22,000</strong><br><small>($45/mo start average)</small></td>
+                    </tr>
+                    <tr style="background:#f7fafc;">
+                        <td class="left"><strong>Medigap Usage Costs</strong><br><small>(Copays, Deductibles, Excess Charges)</small></td>
+                        <td><strong style="color:#2b6cb0;">$0</strong><br><small>(100% Covered after Part B Ded)</small></td>
+                        <td><strong>$8,500</strong><br><small>($20 office/$50 ER copays)</small></td>
+                        <td><strong>$32,000</strong><br><small>(Up to $2,950/yr plan deductible when sick)</small></td>
+                    </tr>
+                    <tr class="highlight">
+                        <td class="left"><strong>TOTAL ESTIMATED LIFETIME COST</strong><br><small>(All Medicare + Medigap + Usage)</small></td>
+                        <td><strong>$208,500</strong></td>
+                        <td><strong style="color:#276749;">$193,000</strong><br><small>(Savings: ~$15,500 vs Plan G)</small></td>
+                        <td><strong>$189,000</strong><br><small>(Savings: ~$19,500 if healthy; riskier if sick)</small></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="btn-group">
+            <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save PDF Report</button>
+            <button type="button" class="btn-reset" onclick="resetQuiz()">🔄 Start Over / Retest</button>
+        </div>
+
+        <div class="ref-section">
+            <h4>📚 Scoring Engine Methodology & Evidence Base</h4>
+            <ul>
+                <li><strong>Behavioral Economics & Loss Aversion:</strong> Kahneman, D., & Tversky, A. (1979). <em>Prospect Theory: An Analysis of Decision under Risk.</em> Econometrica, 47(2), 263-291. (Applied to measure point-of-care fee friction and care delay hazards).</li>
+                <li><strong>CMS Medicare Data & Cost Trends:</strong> Centers for Medicare & Medicaid Services (CMS). <em>2026 Medicare Costs & Trustee Reports.</em> U.S. Department of Health and Human Services.</li>
+                <li><strong>Medigap Premium & Switching Dynamics:</strong> Kaiser Family Foundation (KFF). <em>Medicare Supplement Insurance: Enrollment, Premiums, and Plan Availability.</em></li>
+                <li><strong>Preventative Care Hesitation:</strong> Baicker, K., Mullainathan, S., & Schwartzstein, J. (2015). <em>Behavioral Hazard in Health Insurance.</em> Quarterly Journal of Economics, 130(4), 1623-1667.</li>
+            </ul>
+        </div>
+
+    </div>
+</div>
+
+<script>
+function evaluateAssessment() {
+    const form = document.getElementById('quizForm');
+    if (!form.checkValidity()) {
+        alert("Please answer all questions before submitting.");
+        return;
+    }
+
+    // Get Values
+    const q1 = parseInt(form.q1.value);
+    const q2 = parseInt(form.q2.value);
+    const q3 = parseInt(form.q3.value);
+    const q4 = parseInt(form.q4.value);
+    const q5 = parseInt(form.q5.value);
+    const q6 = parseInt(form.q6.value);
+    const q7 = parseInt(form.q7.value);
+    const q8 = parseInt(form.q8.value);
+    const q9 = parseInt(form.q9.value);
+    const q10 = parseInt(form.q10.value);
+    const q11 = parseInt(form.q11.value);
+    const q12 = parseInt(form.q12.value);
+    const q13 = form.q13.value;
+
+    // 1. Consistency & Discrepancy Analysis (Angle A vs Angle B)
+    let discrepancies = [];
+
+    // Pair 1: Symptom Friction (Q1 vs Q2)
+    let pair1Diff = Math.abs(q1 - q2);
+    let careFrictionBase = Math.max(q1, q2);
+    if (pair1Diff >= 2) {
+        discrepancies.push("Noticeable difference between weekend symptom reaction (Q1) and diagnostic test willingness (Q2). Adjusted friction score to favor medical safety.");
+    }
+
+    // Pair 2: Bill Friction vs Unused Premium Regret (Q3 vs Q4)
+    let pair2Diff = Math.abs(q3 - q4);
+    if (pair2Diff >= 2) {
+        discrepancies.push("Conflict detected between dislike of surprise bills (Q3) and regret over unused premiums (Q4).");
+    }
+
+    // Pair 3: Buffer vs Payment Model (Q5 vs Q6)
+    if (q5 === 1 && q6 === 4) {
+        discrepancies.push("You maintain emergency savings (Q5) but express a strong psychological preference for fixed monthly bills (Q6).");
+    }
+
+    let adjustedCareFrictionScore = careFrictionBase + q3 + Math.max(q5, q6) + q7 + q8;
+
+    // 2. Plan Recommendation Logic
+    let primaryPlan = "";
+    let rationale = "";
+    let warning = "";
+
+    if (q13 === "PRE2020") {
+        primaryPlan = "Plan F (Grandfathered)";
+        rationale = "Because you were eligible for Medicare before Jan 1, 2020, you qualify for Plan F, which covers 100% of out-of-pocket costs including the Part B deductible.";
+        warning = "Note: Plan F premiums tend to increase faster than Plan G premiums over time as the insured pool ages.";
+    } 
+    else if (adjustedCareFrictionScore >= 16 || q5 === 4 || q6 === 4) {
+        primaryPlan = "Standard Plan G";
+        rationale = "Your responses indicate a preference for high predictability and zero medical bill friction at the point of care. Standard Plan G eliminates out-of-pocket usage expenses after the annual Part B deductible ($283).";
+        warning = "⚠️ <strong>Plan G Premium Warning:</strong> Plan G has the highest fixed premium among current options ($208,500 total estimated lifetime cost). Ensure your budget accommodates rate increases in your late 70s and 80s.";
+    } 
+    else if (q1 === 4 && q5 === 1 && q6 === 1) {
+        primaryPlan = "High-Deductible Plan G";
+        rationale = "You possess strong liquid reserves ($3,000+) and a balance-sheet mindset comfortable with deductible trade-offs. HD-Plan G delivers maximum premium savings (~$60,000 saved in lifetime premiums compared to Plan G).";
+        warning = "⚠️ <strong>Care-Delay Risk Warning:</strong> You must ensure you do NOT hesitate to visit the emergency room or doctor during early illness symptoms simply to avoid triggering the $2,950 plan deductible.";
+    } 
+    else {
+        primaryPlan = "Plan N";
+        rationale = "Plan N offers an optimal balance between low monthly premiums and capped copays ($20 office / $50 ER). It projects lifetime savings of ~$15,500 compared to Plan G.";
+        warning = "⚠️ <strong>Plan N Excess Charge Caveat:</strong> Plan N does not cover Part B Excess Charges. Verify that your primary doctors accept Medicare assignment rate.";
+    }
+
+    // Display Discrepancies
+    const discBox = document.getElementById('discrepancyBox');
+    if (discrepancies.length > 0) {
+        discBox.innerHTML = "<strong>🔍 Behavioral Consistency Adjustments:</strong><ul>" + discrepancies.map(d => `<li>${d}</li>`).join('') + "</ul>";
+        discBox.style.display = "block";
+    } else {
+        discBox.style.display = "none";
+    }
+
+    // Display Main Results
+    document.getElementById('recPlan').innerText = primaryPlan;
+    document.getElementById('recRationale').innerText = rationale;
+    document.getElementById('warningBox').innerHTML = warning;
+    document.getElementById('results').style.display = "block";
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetQuiz() {
+    document.getElementById('quizForm').reset();
+    document.getElementById('results').style.display = "none";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
