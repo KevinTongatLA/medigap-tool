@@ -18,7 +18,7 @@ An interactive, single-page web assessment tool designed to help individuals sel
 
 ### Web Browser
 Simply click the live link below to run the profiler on your desktop or mobile device:
-👉 [INSERT YOUR NETLIFY OR GITHUB PAGES LINK HERE]
+👉 (https://kevintongatla.github.io/medigap-tool/)
 
 
 ## 📝 Tester Feedback Guide
