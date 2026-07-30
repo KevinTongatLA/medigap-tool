@@ -258,7 +258,7 @@
         </div>
     </form>
 
-   <div id="results" id="report-container">
+   <div id="results" style="display:none;">
         <h2>Assessment & Lifetime Cost Profile</h2>
         
         <div id="discrepancyBox" class="alert-box warning"></div>
@@ -445,23 +445,39 @@ function evaluateAssessment() {
 }
     
 function downloadPDF() {
-  // Uses 'results' element which now holds the report content
-  const element = document.getElementById('results'); 
+    const element = document.getElementById('results');
 
-  if (!element) {
-      alert("Please run the assessment first to generate the report.");
-      return;
-  }
+    if (!element || element.style.display === "none") {
+        alert("Please complete the assessment first before downloading the PDF.");
+        return;
+    }
 
-  const options = {
-    margin:       0.5,
-    filename:     'Medigap_Assessment_Report.pdf',
-    image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2 },
-    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-  };
+    // Detect iOS / iPhone / iPad Safari
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
-  html2pdf().set(options).from(element).save();
+    if (isIOS) {
+        // iOS Safari workaround: Native Print dialog allows direct "Save to Files / PDF"
+        alert("On iPhone/iPad, use the Print prompt to save as PDF: Tap Share -> Save to Files or pinch out on the preview.");
+        window.print();
+        return;
+    }
+
+    // Optimized html2pdf configuration for Chrome / Edge / Desktop Safari
+    const options = {
+        margin:       [0.4, 0.4, 0.4, 0.4],
+        filename:     'Medigap_Assessment_Report.pdf',
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { 
+            scale: 2, 
+            useCORS: true, 
+            logging: false,
+            scrollX: 0,
+            scrollY: 0
+        },
+        jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+    };
+
+    html2pdf().set(options).from(element).save();
 }
     
 function resetQuiz() {
