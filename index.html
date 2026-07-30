@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Medigap Behavioral & 25-Year Lifetime Cost Profiler v3</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+    </script>
     <style>
         * { box-sizing: border-box; }
         body {
@@ -335,7 +337,8 @@
         </div>
 
         <div class="btn-group">
-            <button type="button" class="btn-print" onclick="window.print()">🖨️ Print / Save PDF Report</button>
+            <button type="button" class="btn-print" onclick="window.print()">🖨️ Print</button>
+            <button type="button" class="btn-pdf" onclick="downloadPDF()" class="btn-pdf">📥 Save as PDF</button>
             <button type="button" class="btn-reset" onclick="resetQuiz()">🔄 Start Over / Retest</button>
         </div>
 
@@ -440,7 +443,23 @@ function evaluateAssessment() {
     document.getElementById('results').style.display = "block";
     document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 }
+    
+function downloadPDF() {
+  // Replace 'report-container' with the ID of the div holding your report content
+  const element = document.getElementById('report-container'); 
 
+  const options = {
+    margin:       0.5,
+    filename:     'Medigap_Assessment_Report.pdf',
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2 },
+    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+  };
+
+  // Generate and download the PDF directly to the device
+  html2pdf().set(options).from(element).save();
+}
+    
 function resetQuiz() {
     document.getElementById('quizForm').reset();
     document.getElementById('results').style.display = "none";
