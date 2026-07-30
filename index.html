@@ -258,7 +258,7 @@
         </div>
     </form>
 
-    <div id="results">
+   <div id="results" id="report-container">
         <h2>Assessment & Lifetime Cost Profile</h2>
         
         <div id="discrepancyBox" class="alert-box warning"></div>
@@ -338,7 +338,7 @@
 
         <div class="btn-group">
             <button type="button" class="btn-print" onclick="window.print()">🖨️ Print</button>
-            <button type="button" class="btn-pdf" onclick="downloadPDF()" class="btn-pdf">📥 Save as PDF</button>
+            <button type="button" class="btn-pdf" onclick="downloadPDF()">📥 Save as PDF</button>
             <button type="button" class="btn-reset" onclick="resetQuiz()">🔄 Start Over / Retest</button>
         </div>
 
@@ -445,8 +445,13 @@ function evaluateAssessment() {
 }
     
 function downloadPDF() {
-  // Replace 'report-container' with the ID of the div holding your report content
-  const element = document.getElementById('report-container'); 
+  // Uses 'results' element which now holds the report content
+  const element = document.getElementById('results'); 
+
+  if (!element) {
+      alert("Please run the assessment first to generate the report.");
+      return;
+  }
 
   const options = {
     margin:       0.5,
@@ -456,7 +461,6 @@ function downloadPDF() {
     jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
   };
 
-  // Generate and download the PDF directly to the device
   html2pdf().set(options).from(element).save();
 }
     
